@@ -2,6 +2,9 @@ from dotenv import load_dotenv
 from decouple import config
 from pathlib import Path
 import os
+import dj_database_url
+
+load_dotenv
 
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -14,7 +17,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -24,12 +27,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'corsheaders',
     'authentication',
+    'items',
     'bids',
     'reviews',
-    'items',
     'payments',
-    'corsheaders',
 ]
 
 AUTH_USER_MODEL = 'authentication.User'
@@ -56,7 +59,7 @@ CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOW_HEADERS = ["authorization", "content-type"]
 
-ROOT_URLCONF = 'project.urls'
+ROOT_URLCONF = 'project.urls' 
 
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [
@@ -86,16 +89,25 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'project.wsgi.application'
 
-DATABASES = {  # added this to use postgres as the database instead of the default sqlite. do this before running the initial migrations or you will need to do it again
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'bidhub',
-        'HOST': 'localhost',
-        'PORT': os.getenv('PORT'),
-        'USER': os.getenv('PROJECT_DB_USER'),
-        'PASSWORD': os.getenv('PROJECT_DB_PASSWORD')
+if 'ON_HEROKU' in os.environ:
+    DATABASES = {
+        "default": dj_database_url.config(
+            env='DATABASE_URL',
+            conn_max_age=600,
+            conn_health_checks=True,
+            ssl_require=True,
+        ),
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'bidhub',
+        }
+    }
+
+if not 'ON_HEROKU' in os.environ:
+    DEBUG = True
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
